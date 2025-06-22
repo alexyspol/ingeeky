@@ -1,0 +1,61 @@
+# Composer
+/vendor/
+
+# Environment config
+.env
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*.bak
+
+# OS generated
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+desktop.ini
+
+# CI4 Writable folders
+writable/cache/*
+writable/logs/*
+writable/session/*
+writable/debugbar/*
+!writable/index.html
+!writable/uploads/.gitkeep
+writable/uploads/*
+# Uncomment if you want to ignore SQLite DB:
+# writable/database.db
+
+# PHP testing & artifacts
+phpunit.xml
+phpunit.xml.dist
+coverage/
+test_output/
+.phpunit.result.cache
+
+# Node / Frontend
+node_modules/
+npm-debug.log
+yarn.lock
+package-lock.json
+/public/build/
+public/assets/*
+!public/assets/.gitkeep
+
+# Local development & misc
+*.log
+*.tmp
+*.cache
+*.sqlite
+*.sqlite3
+*.db-journal
+*.sql
+*.seed.php
+*.coverage
+*.code-coverage
+*.old
+*.orig
+*~
