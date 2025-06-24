@@ -49,9 +49,9 @@ class AuthGroups extends ShieldAuthGroups
             'title'       => 'Admin',
             'description' => 'Day to day administrators of the site.',
         ],
-        'developer' => [
-            'title'       => 'Developer',
-            'description' => 'Site programmers.',
+        'support' => [
+            'title'       => 'Support Agent',
+            'description' => 'Users who provide customer support.',
         ],
         'user' => [
             'title'       => 'User',
@@ -102,7 +102,7 @@ class AuthGroups extends ShieldAuthGroups
             'users.delete',
             'beta.access',
         ],
-        'developer' => [
+        'support' => [
             'admin.access',
             'admin.settings',
             'users.create',
