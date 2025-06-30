@@ -9,3 +9,4 @@ $routes->get('contact-us', 'PagesController::contact');
 
 service('auth')->routes($routes);
 
+$routes->resource('tickets', ['controller' => 'TicketsController']);

@@ -10,7 +10,14 @@
             <a href="/">Home</a> |
             <a href="/about-us">About</a> |
             <a href="/services">Services</a> |
-            <a href="/contact-us">Contact</a>
+            <a href="/contact-us">Contact</a> |
+
+            <?php if (auth()->loggedIn()): ?>
+                <a href="<?= url_to('logout') ?>">Logout</a>
+            <?php else: ?>
+                <a href="<?= url_to('login') ?>">Login</a> |
+                <a href="<?= url_to('register') ?>">Register</a>
+            <?php endif; ?>
         </nav>
         <hr>
     </header>
