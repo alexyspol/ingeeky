@@ -9,28 +9,21 @@ class TicketModel extends Model
     protected $table      = 'tickets';
     protected $primaryKey = 'id';
 
-    protected $allowedFields = ['title', 'description', 'status', 'created_at', 'updated_at'];
+    protected $allowedFields = ['title', 'status', 'created_by'];
 
-    // Optional: Automatically handle created_at and updated_at timestamps
     protected $useTimestamps = true;
+    protected $dateFormat    = 'datetime';
 
-    // Optional: Specify date format
-    protected $dateFormat = 'datetime';
-
-    // Optional: Validation rules
     protected $validationRules = [
-        'title'       => 'required|min_length[3]|max_length[255]',
-        'description' => 'required',
-        'status'      => 'required|in_list[open,closed,pending]',
+        'title'      => 'required|min_length[3]|max_length[255]',
+        'status'     => 'required|in_list[open,closed,pending]',
+        'created_by' => 'required|integer',
     ];
 
     protected $validationMessages = [
         'title' => [
             'required'   => 'A title is required.',
             'min_length' => 'Title must be at least 3 characters.',
-        ],
-        'description' => [
-            'required' => 'Please provide a description.',
         ],
         'status' => [
             'required' => 'Please select a status.',

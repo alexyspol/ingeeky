@@ -13,6 +13,7 @@
             <a href="/contact-us">Contact</a> |
 
             <?php if (auth()->loggedIn()): ?>
+                <a href="<?= url_to('tickets') ?>">Tickets</a> |
                 <a href="<?= url_to('logout') ?>">Logout</a>
             <?php else: ?>
                 <a href="<?= url_to('login') ?>">Login</a> |
