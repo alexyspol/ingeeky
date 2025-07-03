@@ -37,7 +37,7 @@ class TicketsController extends BaseController
         // 1. Create the ticket
         $ticketData = [
             'title'      => $post['title'],
-            'status'     => $post['status'],
+            'status'     => 'open',
             'created_by' => $userId,
         ];
 

@@ -7,13 +7,6 @@
     <label for="title">Title</label><br>
     <input type="text" name="title" required><br><br>
 
-    <label for="status">Status</label><br>
-    <select name="status">
-        <option value="open">Open</option>
-        <option value="pending">Pending</option>
-        <option value="closed">Closed</option>
-    </select><br><br>
-
     <label for="message">Initial Message</label><br>
     <textarea name="message" rows="5" required></textarea><br><br>
 
