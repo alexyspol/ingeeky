@@ -11,7 +11,7 @@ class CreateTicketsTable extends Migration
         $this->forge->addField([
             'id'          => ['type' => 'INT', 'unsigned' => true, 'auto_increment' => true],
             'title'       => ['type' => 'VARCHAR', 'constraint' => 255],
-            'status'      => ['type' => 'ENUM', 'constraint' => ['open', 'closed', 'pending'], 'default' => 'open'],
+            'status'      => ['type' => 'ENUM', 'constraint' => ['open', 'closed', 'customer replied', 'awaiting customer'], 'default' => 'open'],
             'created_by'  => ['type' => 'INT', 'unsigned' => true],
             'created_at'  => ['type' => 'DATETIME', 'null' => true],
             'updated_at'  => ['type' => 'DATETIME', 'null' => true],

@@ -16,7 +16,7 @@ class TicketModel extends Model
 
     protected $validationRules = [
         'title'      => 'required|min_length[3]|max_length[255]',
-        'status'     => 'required|in_list[open,closed,pending]',
+        'status'     => 'required|in_list[open,closed,pending,customer replied,awaiting customer]',
         'created_by' => 'required|integer',
     ];
 
