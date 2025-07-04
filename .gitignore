@@ -26,8 +26,7 @@ writable/debugbar/*
 !writable/index.html
 !writable/uploads/.gitkeep
 writable/uploads/*
-# Uncomment if you want to ignore SQLite DB:
-# writable/database.db
+writable/database.db
 
 # PHP testing & artifacts
 phpunit.xml
