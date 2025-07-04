@@ -11,3 +11,5 @@ service('auth')->routes($routes);
 
 $routes->resource('tickets', ['controller' => 'TicketsController', 'filter' => 'session']);
 $routes->post('ticket-messages', 'TicketMessagesController::create');
+
+$routes->get('dashboard', 'DashboardController::index', ['as' => 'dashboard', 'filter' => 'isEmployee']);
