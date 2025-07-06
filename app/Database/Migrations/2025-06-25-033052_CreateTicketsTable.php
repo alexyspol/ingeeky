@@ -12,12 +12,14 @@ class CreateTicketsTable extends Migration
             'id'          => ['type' => 'INT', 'unsigned' => true, 'auto_increment' => true],
             'title'       => ['type' => 'VARCHAR', 'constraint' => 255],
             'status'      => ['type' => 'ENUM', 'constraint' => ['open', 'closed', 'customer replied', 'awaiting customer'], 'default' => 'open'],
+            'product_id'  => ['type' => 'INT', 'unsigned' => true, 'null' => true],
             'created_by'  => ['type' => 'INT', 'unsigned' => true],
             'created_at'  => ['type' => 'DATETIME', 'null' => true],
             'updated_at'  => ['type' => 'DATETIME', 'null' => true],
         ]);
 
         $this->forge->addKey('id', true); // Primary key
+        $this->forge->addForeignKey('product_id', 'products', 'id', 'SET NULL', 'CASCADE');
         $this->forge->addForeignKey('created_by', 'users', 'id', 'CASCADE', 'CASCADE');
         $this->forge->createTable('tickets');
     }

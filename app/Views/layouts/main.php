@@ -14,6 +14,7 @@
 
             <?php if (auth()->loggedIn()): ?>
                 <a href="<?= url_to('tickets') ?>">Tickets</a> |
+                <a href="<?= url_to('products.index') ?>">Products</a> |
                 <?php if (! auth()->user()->inGroup('user')): ?>
                     <a href="<?= url_to('dashboard') ?>">Dashboard</a> |
                 <?php endif; ?>
