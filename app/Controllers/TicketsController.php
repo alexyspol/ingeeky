@@ -2,6 +2,8 @@
 
 namespace App\Controllers;
 
+use CodeIgniter\Exceptions\PageNotFoundException;
+
 use App\Models\TicketModel;
 use App\Models\UserModel;
 use App\Models\TicketMessageModel;
@@ -123,7 +125,7 @@ class TicketsController extends BaseController
         $ticket = $this->ticketModel->find($id);
 
         if (!$ticket) {
-            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound("Ticket with ID $id not found");
+            throw PageNotFoundException::forPageNotFound("Ticket with ID $id not found");
         }
 
         return view('tickets/edit', ['ticket' => $ticket]);
