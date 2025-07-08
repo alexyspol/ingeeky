@@ -3,6 +3,8 @@
 namespace App\Controllers;
 
 use App\Models\TicketModel;
+use App\Models\UserModel;
+use App\Models\TicketMessageModel;
 
 class TicketsController extends BaseController
 {
@@ -41,7 +43,7 @@ class TicketsController extends BaseController
             'created_by' => $userId,
         ];
 
-        $ticketModel = new \App\Models\TicketModel();
+        $ticketModel = new TicketModel();
         $ticketId = $ticketModel->insert($ticketData);
 
         if (!$ticketId) {
@@ -55,7 +57,7 @@ class TicketsController extends BaseController
             'message'   => $post['message'],
         ];
 
-        $messageModel = new \App\Models\TicketMessageModel();
+        $messageModel = new TicketMessageModel();
         $messageModel->insert($messageData);
 
         return redirect()->to('/tickets/' . $ticketId)->with('message', 'Ticket created successfully.');
@@ -64,21 +66,54 @@ class TicketsController extends BaseController
     // GET /tickets/{id}
     public function show($id = null)
     {
-        $ticketModel = new \App\Models\TicketModel();
+        $ticketModel = new TicketModel();
         $ticket = $ticketModel->find($id);
 
         if (!$ticket) {
-            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound("Ticket not found");
+            throw PageNotFoundException::forPageNotFound("Ticket not found");
         }
 
-        $messageModel = new \App\Models\TicketMessageModel();
+        $messageModel = new TicketMessageModel();
         $messages = $messageModel->where('ticket_id', $id)
                                 ->orderBy('created_at', 'asc')
                                 ->findAll();
 
+        // Initialize an array to store unique user IDs from messages
+        $userIds = [];
+        foreach ($messages as $msg) {
+            $userIds[] = $msg['user_id'];
+        }
+
+        // Get unique user IDs to avoid fetching the same user multiple times
+        $userIds = array_unique($userIds);
+
+        // Fetch user entities for all unique user IDs
+        $userModel = new UserModel(); // Use your custom UserModel
+        $users = $userModel->find($userIds); // find() can accept an array of IDs
+
+        // Create a map of user_id to User entity for easy lookup
+        $usersMap = [];
+        foreach ($users as $user) {
+            $usersMap[$user->id] = $user;
+        }
+
+        // Attach sender's profile data to each message
+        // We'll iterate through messages and add a 'sender' key
+        // containing the User entity (which has the getProfile() method)
+        $messagesWithSender = [];
+        foreach ($messages as $msg) {
+            if (isset($usersMap[$msg['user_id']])) {
+                $msg['sender'] = $usersMap[$msg['user_id']];
+            } else {
+                // Handle cases where a user might not be found (e.g., deleted user)
+                $msg['sender'] = null;
+            }
+            $messagesWithSender[] = $msg;
+        }
+
         return view('tickets/show', [
             'ticket'   => $ticket,
-            'messages' => $messages,
+            'messages' => $messagesWithSender,
         ]);
     }
 
