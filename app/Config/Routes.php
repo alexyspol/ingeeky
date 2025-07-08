@@ -24,3 +24,9 @@ $routes->group('products', ['namespace' => 'App\Controllers'], function ($routes
 });
 
 $routes->get('dashboard', 'DashboardController::index', ['as' => 'dashboard', 'filter' => 'isEmployee']);
+
+// Profile Management Routes
+$routes->group('profile', ['filter' => 'session'], static function ($routes) {
+    $routes->get('edit', 'ProfileController::edit', ['as' => 'profile.edit']);
+    $routes->post('update', 'ProfileController::update', ['as' => 'profile.update']);
+});
