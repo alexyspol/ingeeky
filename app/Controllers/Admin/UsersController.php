@@ -4,7 +4,7 @@ use CodeIgniter\Exceptions\PageNotFoundException;
 use App\Controllers\BaseController;
 use App\Entities\User;
 
-class UserController extends BaseController
+class UsersController extends BaseController
 {
     protected $userModel;
 

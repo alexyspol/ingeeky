@@ -26,16 +26,18 @@ $routes->group('products', ['namespace' => 'App\Controllers'], function ($routes
 $routes->get('dashboard', 'DashboardController::index', ['as' => 'dashboard', 'filter' => 'isEmployee']);
 
 // Profile Management Routes
-$routes->group('profile', ['filter' => 'session'], static function ($routes) {
-    $routes->get('edit', 'ProfileController::edit', ['as' => 'profile.edit']);
-    $routes->post('update', 'ProfileController::update', ['as' => 'profile.update']);
+$routes->group('profiles', ['filter' => 'session'], static function ($routes) {
+    $routes->get('edit', 'ProfilesController::edit', ['as' => 'profile.edit']);
+    $routes->post('update', 'ProfilesController::update', ['as' => 'profile.update']);
 });
 
 $routes->group('admin', ['filter' => 'group:admin'], static function ($routes) {
-    $routes->get('users', 'Admin\UserController::index', ['as' => 'admin.users.index']);
-    $routes->get('users/new', 'Admin\UserController::new', ['as' => 'admin.user.new']);
-    $routes->post('users/create', 'Admin\UserController::create', ['as' => 'admin.user.create']);
-    $routes->get('users/edit/(:num)', 'Admin\UserController::edit/$1', ['as' => 'admin.user.edit']);
-    $routes->post('users/update/(:num)', 'Admin\UserController::update/$1', ['as' => 'admin.user.update']);
-    $routes->post('users/delete/(:num)', 'Admin\UserController::delete/$1', ['as' => 'admin.user.delete']);
+    $routes->group('users', static function ($routes) {
+        $routes->get('/', 'Admin\UsersController::index', ['as' => 'admin.users.index']);
+        $routes->get('new', 'Admin\UsersController::new', ['as' => 'admin.user.new']);
+        $routes->post('create', 'Admin\UsersController::create', ['as' => 'admin.user.create']);
+        $routes->get('edit/(:num)', 'Admin\UsersController::edit/$1', ['as' => 'admin.user.edit']);
+        $routes->post('update/(:num)', 'Admin\UsersController::update/$1', ['as' => 'admin.user.update']);
+        $routes->post('delete/(:num)', 'Admin\UsersController::delete/$1', ['as' => 'admin.user.delete']);
+    });
 });

@@ -7,7 +7,7 @@ use CodeIgniter\HTTP\ResponseInterface;
 use App\Models\ProfileModel;
 use App\Entities\Profile;
 
-class ProfileController extends BaseController
+class ProfilesController extends BaseController
 {
     /**
      * @var ProfileModel
