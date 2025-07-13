@@ -21,49 +21,27 @@ class UsersController extends BaseController
 
     public function new()
     {
-        $authGroupsConfig = config('AuthGroups');
-        $allGroupDefinitions = $authGroupsConfig->groups;
-        $data['allGroups'] = array_keys($allGroupDefinitions);
-        sort($data['allGroups']);
-
-        $data['defaultGroup'] = $authGroupsConfig->defaultGroup;
-
-        return view('admin/users/new', $data);
+        return view('admin/users/new', $this->getGroupData());
     }
 
     public function create()
     {
-        $rules = [
-            'username'         => 'required|alpha_numeric_space|min_length[3]|max_length[30]|is_unique[users.username]',
-            'email'            => 'required|valid_email|is_unique[auth_identities.secret]',
-            'password'         => 'required|min_length[8]',
-            'password_confirm' => 'required_with[password]|matches[password]',
-            'group'            => 'required|string',
-        ];
+        $rules = $this->getValidationRules('create');
 
         if (! $this->validate($rules)) {
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
-        $user = new User([
-            'username' => $this->request->getPost('username'),
-            'email'    => $this->request->getPost('email'),
-            'password' => $this->request->getPost('password'),
-        ]);
+        $user = new User($this->getPostedUserData());
 
         if (! $this->userModel->save($user)) {
             return redirect()->back()->withInput()->with('errors', $this->userModel->errors());
         }
 
-        $userIdentifier = $this->request->getPost('email');
+        // Re-fetch the user to ensure ID is present
+        $user = $this->userModel->findByCredentials(['email' => $user->email]);
 
-        // Re-fetch the user from the database to ensure the ID is populated
-        $user = $this->userModel->findByCredentials(['email' => $userIdentifier]);
-
-        // Assign the user to the selected group
-        $selectedGroup = $this->request->getPost('group');
-        $user->addGroup($selectedGroup);
-        $this->userModel->save($user);
+        $this->assignGroupToUser($user, $this->request->getPost('group'));
 
         return redirect()->to(route_to('admin.users.index'))->with('message', 'User created successfully.');
     }
@@ -76,17 +54,8 @@ class UsersController extends BaseController
             throw PageNotFoundException::forPageNotFound('User not found.');
         }
 
+        $data = $this->getGroupData();
         $data['user'] = $user;
-
-        // Get all group definitions from app/Config/AuthGroups.php
-        $authGroupsConfig = config('AuthGroups');
-        $allGroupDefinitions = $authGroupsConfig->groups;
-
-        // Extract just the group names (keys) for the dropdown
-        $data['allGroups'] = array_keys($allGroupDefinitions);
-        sort($data['allGroups']);
-
-        // Get the groups the user currently belongs to (returns an array of group names)
         $data['userGroups'] = $user->getGroups();
 
         return view('admin/users/edit', $data);
@@ -100,53 +69,84 @@ class UsersController extends BaseController
             throw PageNotFoundException::forPageNotFound('User not found.');
         }
 
-        $rules = [
-            'username' => 'required|alpha_numeric_space|min_length[3]|max_length[30]|is_unique[users.username,id,' . $id . ']',
-            'email'    => 'required|valid_email|is_unique[auth_identities.secret,user_id,' . $id . ']',
-            'group'    => 'required|string',
-        ];
-
-        // Only validate password if it's being changed
-        if ($this->request->getPost('password')) {
-            $rules['password'] = 'min_length[8]';
-            $rules['password_confirm'] = 'required_with[password]|matches[password]';
-        }
+        $rules = $this->getValidationRules('update', $id);
 
         if (! $this->validate($rules)) {
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
-        $updateData = [
-            'username' => $this->request->getPost('username'),
-            'email'    => $this->request->getPost('email'),
-        ];
-
-        if ($this->request->getPost('password')) {
-            $updateData['password'] = $this->request->getPost('password');
-        }
-
-        $user->fill($updateData);
+        $user->fill($this->getPostedUserData(true));
 
         if (! $this->userModel->save($user)) {
             return redirect()->back()->withInput()->with('errors', $this->userModel->errors());
         }
 
-        $selectedGroup = $this->request->getPost('group');
-        if (! empty($selectedGroup)) {
-            // syncGroups ensures the user only belongs to the groups provided in the array
-            $user->syncGroups($selectedGroup);
-            $this->userModel->save($user); // Save again to persist group changes
-        }
+        $this->assignGroupToUser($user, $this->request->getPost('group'));
 
         return redirect()->to(route_to('admin.users.index'))->with('message', 'User updated successfully.');
     }
 
     public function delete($id)
     {
-        if (! $this->userModel->delete($id, true)) { // Pass true for permanent delete
+        if (! $this->userModel->delete($id, true)) {
             return redirect()->back()->with('error', 'Failed to delete user.');
         }
 
         return redirect()->to(route_to('admin.users.index'))->with('message', 'User deleted successfully.');
+    }
+
+    // ---------------------
+    // 🔧 Helper Methods
+    // ---------------------
+
+    protected function getGroupData(): array
+    {
+        $config = config('AuthGroups');
+        $allGroups = array_keys($config->groups);
+        sort($allGroups);
+
+        return [
+            'allGroups'    => $allGroups,
+            'defaultGroup' => $config->defaultGroup,
+        ];
+    }
+
+    protected function getValidationRules(string $context, ?int $userId = null): array
+    {
+        $rules = [
+            'username' => "required|alpha_numeric_space|min_length[3]|max_length[30]|is_unique[users.username" . ($userId ? ",id,$userId" : "") . "]",
+            'email'    => "required|valid_email|is_unique[auth_identities.secret" . ($userId ? ",user_id,$userId" : "") . "]",
+            'group'    => 'required|string',
+        ];
+
+        if ($context === 'create' || $this->request->getPost('password')) {
+            $rules['password'] = 'required|min_length[8]';
+            $rules['password_confirm'] = 'required_with[password]|matches[password]';
+        }
+
+        return $rules;
+    }
+
+    protected function getPostedUserData(bool $isUpdate = false): array
+    {
+        $data = [
+            'username' => $this->request->getPost('username'),
+            'email'    => $this->request->getPost('email'),
+        ];
+
+        $password = $this->request->getPost('password');
+        if (!empty($password)) {
+            $data['password'] = $password;
+        }
+
+        return $data;
+    }
+
+    protected function assignGroupToUser(User $user, string $group)
+    {
+        if ($user->id) {
+            $user->syncGroups($group);
+            $this->userModel->save($user); // persist group assignment
+        }
     }
 }
