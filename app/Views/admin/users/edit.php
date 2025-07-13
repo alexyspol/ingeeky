@@ -41,6 +41,20 @@ Edit User: <?= esc($user->username) ?>
             <input type="password" class="form-control" id="password_confirm" name="password_confirm">
         </div>
 
+       <div class="mb-3">
+            <label for="group" class="form-label">Assign Group</label>
+            <select class="form-select" id="group" name="group" required>
+                <option value="">Select a Group</option>
+                <?php foreach ($allGroups as $group): ?>
+                    <option value="<?= esc($group) ?>"
+                        <?= old('group', (isset($userGroups[0]) ? $userGroups[0] : '')) === $group ? 'selected' : '' ?>>
+                        <?= esc($group) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+            <div class="form-text">Select the primary group for this user.</div>
+        </div>
+
         <button type="submit" class="btn btn-success">Update User</button>
         <a href="<?= route_to('admin.users.index') ?>" class="btn btn-secondary">Cancel</a>
     </form>

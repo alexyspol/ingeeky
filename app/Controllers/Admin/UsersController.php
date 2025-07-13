@@ -21,17 +21,24 @@ class UsersController extends BaseController
 
     public function new()
     {
-        return view('admin/users/new');
+        $authGroupsConfig = config('AuthGroups');
+        $allGroupDefinitions = $authGroupsConfig->groups;
+        $data['allGroups'] = array_keys($allGroupDefinitions);
+        sort($data['allGroups']);
+
+        $data['defaultGroup'] = $authGroupsConfig->defaultGroup;
+
+        return view('admin/users/new', $data);
     }
 
     public function create()
     {
         $rules = [
-            'username' => 'required|alpha_numeric_space|min_length[3]|max_length[30]|is_unique[users.username]',
-            'email'    => 'required|valid_email|is_unique[auth_identities.secret]', // Shield stores email in auth_identities.secret
-            'password' => 'required|min_length[8]',
+            'username'         => 'required|alpha_numeric_space|min_length[3]|max_length[30]|is_unique[users.username]',
+            'email'            => 'required|valid_email|is_unique[auth_identities.secret]',
+            'password'         => 'required|min_length[8]',
             'password_confirm' => 'required_with[password]|matches[password]',
-            // Add validation for custom fields here
+            'group'            => 'required|string',
         ];
 
         if (! $this->validate($rules)) {
@@ -48,14 +55,15 @@ class UsersController extends BaseController
             return redirect()->back()->withInput()->with('errors', $this->userModel->errors());
         }
 
-        // Handle custom fields if you have a separate user_details table
-        // $userDetailsModel = new App\Models\UserDetailsModel();
-        // $userDetailsData = [
-        //     'user_id' => $user->id,
-        //     'first_name' => $this->request->getPost('first_name'),
-        //     'last_name' => $this->request->getPost('last_name'),
-        // ];
-        // $userDetailsModel->insert($userDetailsData);
+        $userIdentifier = $this->request->getPost('email');
+
+        // Re-fetch the user from the database to ensure the ID is populated
+        $user = $this->userModel->findByCredentials(['email' => $userIdentifier]);
+
+        // Assign the user to the selected group
+        $selectedGroup = $this->request->getPost('group');
+        $user->addGroup($selectedGroup);
+        $this->userModel->save($user);
 
         return redirect()->to(route_to('admin.users.index'))->with('message', 'User created successfully.');
     }
@@ -69,8 +77,17 @@ class UsersController extends BaseController
         }
 
         $data['user'] = $user;
-        // Load custom user details if applicable
-        // $data['userDetails'] = (new App\Models\UserDetailsModel())->where('user_id', $id)->first();
+
+        // Get all group definitions from app/Config/AuthGroups.php
+        $authGroupsConfig = config('AuthGroups');
+        $allGroupDefinitions = $authGroupsConfig->groups;
+
+        // Extract just the group names (keys) for the dropdown
+        $data['allGroups'] = array_keys($allGroupDefinitions);
+        sort($data['allGroups']);
+
+        // Get the groups the user currently belongs to (returns an array of group names)
+        $data['userGroups'] = $user->getGroups();
 
         return view('admin/users/edit', $data);
     }
@@ -86,7 +103,7 @@ class UsersController extends BaseController
         $rules = [
             'username' => 'required|alpha_numeric_space|min_length[3]|max_length[30]|is_unique[users.username,id,' . $id . ']',
             'email'    => 'required|valid_email|is_unique[auth_identities.secret,user_id,' . $id . ']',
-            // Add validation for custom fields
+            'group'    => 'required|string',
         ];
 
         // Only validate password if it's being changed
@@ -114,13 +131,12 @@ class UsersController extends BaseController
             return redirect()->back()->withInput()->with('errors', $this->userModel->errors());
         }
 
-        // Update custom fields if you have a separate user_details table
-        // $userDetailsModel = new App\Models\UserDetailsModel();
-        // $userDetailsData = [
-        //     'first_name' => $this->request->getPost('first_name'),
-        //     'last_name' => $this->request->getPost('last_name'),
-        // ];
-        // $userDetailsModel->update($user->id, $userDetailsData); // Assuming user_id is the primary key for update
+        $selectedGroup = $this->request->getPost('group');
+        if (! empty($selectedGroup)) {
+            // syncGroups ensures the user only belongs to the groups provided in the array
+            $user->syncGroups($selectedGroup);
+            $this->userModel->save($user); // Save again to persist group changes
+        }
 
         return redirect()->to(route_to('admin.users.index'))->with('message', 'User updated successfully.');
     }

@@ -41,6 +41,19 @@ Create New User
             <input type="password" class="form-control" id="password_confirm" name="password_confirm" required>
         </div>
 
+        <div class="mb-3">
+            <label for="group" class="form-label">Assign Group</label>
+            <select class="form-select" id="group" name="group" required>
+                <option value="">Select a Group</option>
+                <?php foreach ($allGroups as $group): ?>
+                    <option value="<?= esc($group) ?>"
+                        <?= old('group', $defaultGroup) === $group ? 'selected' : '' ?>>
+                        <?= esc($group) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+
         <button type="submit" class="btn btn-success">Create User</button>
         <a href="<?= route_to('admin.users.index') ?>" class="btn btn-secondary">Cancel</a>
     </form>
