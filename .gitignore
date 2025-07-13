@@ -58,3 +58,13 @@ public/assets/*
 *.old
 *.orig
 *~
+
+# Node / Frontend
+node_modules/
+npm-debug.log
+yarn.lock
+package-lock.json
+/public/build/
+public/assets/*
+!public/assets/.gitkeep
+public/css/output.css
