@@ -10,6 +10,16 @@ $routes->get('contact-us', 'PagesController::contact');
 service('auth')->routes($routes);
 
 $routes->resource('tickets', ['controller' => 'TicketsController', 'filter' => 'session']);
+// Customer Routes (Protected by session/auth.session filter)
+$routes->group('tickets', ['filter' => 'session'], function($routes) {
+    $routes->get('/', 'TicketsController::index');
+    $routes->get('new', 'TicketsController::new');
+    $routes->post('/', 'TicketsController::create');
+    $routes->get('(:num)', 'TicketsController::show/$1');
+    // Add customer-specific routes like replying if they are not editing the ticket itself
+    $routes->post('(:num)/reply', 'TicketsController::reply/$1'); // If you add a reply method to customer controller
+});
+
 $routes->post('ticket-messages', 'TicketMessagesController::create');
 
 $routes->group('products', ['namespace' => 'App\Controllers'], function ($routes) {
@@ -39,5 +49,17 @@ $routes->group('admin', ['filter' => 'group:admin'], static function ($routes) {
         $routes->get('edit/(:num)', 'Admin\UsersController::edit/$1', ['as' => 'admin.user.edit']);
         $routes->post('update/(:num)', 'Admin\UsersController::update/$1', ['as' => 'admin.user.update']);
         $routes->post('delete/(:num)', 'Admin\UsersController::delete/$1', ['as' => 'admin.user.delete']);
+    });
+
+    $routes->group('tickets', function($routes) {
+        $routes->get('/', 'Admin\TicketsController::index');
+        $routes->get('new', 'Admin\TicketsController::new');
+        $routes->post('/', 'Admin\TicketsController::create');
+        $routes->get('(:num)', 'Admin\TicketsController::show/$1');
+        $routes->get('(:num)/edit', 'Admin\TicketsController::edit/$1');
+        $routes->put('(:num)', 'Admin\TicketsController::update/$1');
+        $routes->patch('(:num)', 'Admin\TicketsController::update/$1');
+        $routes->delete('(:num)', 'Admin\TicketsController::delete/$1');
+        $routes->post('(:num)/reply', 'Admin\TicketsController::reply/$1');
     });
 });

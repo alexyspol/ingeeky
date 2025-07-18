@@ -11,16 +11,21 @@ use App\Models\TicketMessageModel;
 class TicketsController extends BaseController
 {
     protected $ticketModel;
+    protected $ticketMessageModel;
+    protected $userModel;
 
     public function __construct()
     {
-        $this->ticketModel = new TicketModel();
+        $this->ticketModel        = new TicketModel();
+        $this->ticketMessageModel = new TicketMessageModel();
+        $this->userModel          = new UserModel(); // Or whichever model represents your Shield users
     }
 
     // GET /tickets
     public function index()
     {
-        $data['tickets'] = $this->ticketModel->findAll();
+        $userId = auth()->id();
+        $data['tickets'] = $this->ticketModel->where('customer_id', $userId)->findAll();
         return view('tickets/index', $data);
     }
 
@@ -34,33 +39,39 @@ class TicketsController extends BaseController
     public function create()
     {
         $post = $this->request->getPost();
-
-        // Get the current user ID (using Shield)
         $userId = auth()->id();
+
+        // Validation (can be more robust using $this->validate() method)
+        if (!$this->ticketModel->validate($post)) {
+            return redirect()->back()->withInput()->with('errors', $this->ticketModel->errors());
+        }
 
         // 1. Create the ticket
         $ticketData = [
-            'title'      => $post['title'],
-            'status'     => 'open',
-            'created_by' => $userId,
+            'title'       => $post['title'],
+            'status'      => 'open',
+            'created_by'  => $userId,   // Customer creating the ticket
+            'customer_id' => $userId,   // Ticket is for this customer
+            'product_id'  => $post['product_id'] ?? null, // Optional product association
         ];
 
-        $ticketModel = new TicketModel();
-        $ticketId = $ticketModel->insert($ticketData);
+        $ticketId = $this->ticketModel->insert($ticketData);
 
         if (!$ticketId) {
-            return redirect()->back()->withInput()->with('error', 'Could not create ticket.');
+            return redirect()->back()->withInput()->with('error', 'Could not create ticket. Please try again.');
         }
 
         // 2. Create the first message
         $messageData = [
             'ticket_id' => $ticketId,
-            'user_id'   => $userId,
+            'user_id'   => $userId, // Customer sending the message
             'message'   => $post['message'],
         ];
 
-        $messageModel = new TicketMessageModel();
-        $messageModel->insert($messageData);
+        if (!$this->ticketMessageModel->insert($messageData)) {
+            // Optional: Handle if message insertion fails, maybe delete the ticket or log error
+            return redirect()->to('/tickets/' . $ticketId)->with('warning', 'Ticket created but message failed to save.');
+        }
 
         return redirect()->to('/tickets/' . $ticketId)->with('message', 'Ticket created successfully.');
     }
