@@ -72,46 +72,43 @@
             <!-- Navigation -->
             <nav class="hidden md:flex items-center space-x-6">
                 <?php
-                $currentURL = current_url(true);
-                $currentPath = $currentURL->getPath();
-                ?>
+                $currentPath = current_url(true)->getPath();
 
-                <a href="/" class="nav-link group">
-                        <span class="relative <?= $currentPath === '/' ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400' ?>">
-                            Home
-                            <span class="absolute inset-x-0 bottom-0 h-0.5 bg-red-600 transform <?= $currentPath === '/' ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100' ?> transition-transform"></span>
+                $navLinks = [
+                    ['href' => url_to('pages.home'), 'text' => 'Home'],
+                    ['href' => url_to('pages.about'), 'text' => 'About'],
+                    ['href' => url_to('pages.services'), 'text' => 'Services'],
+                ];
+
+                // Add admin-only links if user is logged in and can access admin
+                if (auth()->loggedIn() && auth()->user()->can('admin.access')) {
+                    $navLinks[] = ['href' => url_to('users.index'), 'text' => 'Users'];
+                }
+
+                foreach ($navLinks as $link) {
+                    $linkPath = parse_url($link['href'], PHP_URL_PATH);
+
+                    $isActive = $linkPath === '/'
+                        ? $currentPath === '/'
+                        : str_starts_with($currentPath, $linkPath);
+
+                    $textClass = $isActive
+                        ? 'text-red-600 dark:text-red-400 font-semibold'
+                        : 'text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400';
+                    $underlineClass = $isActive
+                        ? 'scale-x-100'
+                        : 'scale-x-0 group-hover:scale-x-100';
+                    ?>
+                    <a href="<?= $link['href'] ?>" class="nav-link group">
+                        <span class="relative <?= $textClass ?>">
+                            <?= $link['text'] ?>
+                            <span class="absolute inset-x-0 bottom-0 h-0.5 bg-red-600 transform transition-transform <?= $underlineClass ?>"></span>
                         </span>
-                </a>
-                <a href="/about-us" class="nav-link group">
-                        <span class="relative <?= $currentPath === '/about-us' ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400' ?>">
-                            About
-                            <span class="absolute inset-x-0 bottom-0 h-0.5 bg-red-600 transform <?= $currentPath === '/about-us' ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100' ?> transition-transform"></span>
-                        </span>
-                </a>
-                <a href="/services" class="nav-link group">
-                        <span class="relative <?= $currentPath === '/services' ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400' ?>">
-                            Services
-                            <span class="absolute inset-x-0 bottom-0 h-0.5 bg-red-600 transform <?= $currentPath === '/services' ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100' ?> transition-transform"></span>
-                        </span>
-                </a>
+                    </a>
+                <?php } ?>
 
                 <?php if (auth()->loggedIn()): ?>
-                    <?php if (auth()->user()->inGroup('admin')): ?>
-                        <a href="<?= url_to('products.index') ?>" class="nav-link group">
-                                <span class="relative <?= str_contains($currentPath, '/products') ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400' ?>">
-                                    Products
-                                    <span class="absolute inset-x-0 bottom-0 h-0.5 bg-red-600 transform <?= str_contains($currentPath, '/products') ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100' ?> transition-transform"></span>
-                                </span>
-                        </a>
-                        <a href="<?= url_to('admin.users.index') ?>" class="nav-link group">
-                                <span class="relative <?= str_contains($currentPath, '/admin/users') ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400' ?>">
-                                    Users
-                                    <span class="absolute inset-x-0 bottom-0 h-0.5 bg-red-600 transform <?= str_contains($currentPath, '/admin/users') ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100' ?> transition-transform"></span>
-                                </span>
-                        </a>
-                    <?php endif; ?>
-
-                    <a href="<?= url_to('tickets') ?>" class="px-4 py-2 rounded-lg <?= str_contains($currentPath, '/tickets') ? 'bg-red-700 shadow-lg' : 'bg-red-600 hover:bg-red-700' ?> text-white transition-colors shadow-md hover:shadow-lg">
+                    <a href="<?= url_to('tickets.index') ?>" class="px-4 py-2 rounded-lg <?= str_contains($currentPath, '/tickets') ? 'bg-red-700 shadow-lg' : 'bg-red-600 hover:bg-red-700' ?> text-white transition-colors shadow-md hover:shadow-lg">
                         My Tickets
                     </a>
 
@@ -129,7 +126,7 @@
 
                         <!-- Dropdown Menu -->
                         <div x-cloak
-                        <div x-show="open"
+                             x-show="open"
                              x-cloak
                              @click.away="open = false"
                              @keydown.escape.window="open = false"

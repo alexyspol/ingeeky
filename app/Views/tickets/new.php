@@ -1,6 +1,24 @@
 <?= $this->extend('layouts/main') ?>
 <?= $this->section('content') ?>
 
+
+
+<!-- This needs styling -->
+
+<?php if (session('errors')) : ?>
+    <div class="alert alert-danger">
+        <ul>
+            <?php foreach (session('errors') as $error) : ?>
+                <li><?= esc($error) ?></li>
+            <?php endforeach ?>
+        </ul>
+    </div>
+<?php endif; ?>
+
+
+
+
+
     <div class="bg-gray-50 min-h-screen">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div class="bg-white shadow-sm rounded-lg border border-gray-200">
@@ -9,7 +27,8 @@
                 </div>
 
                 <div class="p-6">
-                    <form method="post" action="/tickets" class="space-y-6" id="ticketForm">
+                    <form method="post" action="<?= url_to('tickets.create') ?>" class="space-y-6" id="ticketForm">
+
                         <div>
                             <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Title</label>
                             <input
@@ -18,7 +37,41 @@
                                     id="title"
                                     required
                                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                                    value="<?= old('title') ?>"
+                                    required
                             >
+                        </div>
+
+                        <?php if(!empty($customers)): ?>
+                        <div>
+                            <label for="customer_id" class="block text-sm font-medium text-gray-700 mb-1">Customer</label>
+                            <select
+                                name="customer_id"
+                                id="customer_id"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                                required
+                            >
+                                <option value="">-- Select Customer --</option>
+                                <?php foreach ($customers as $customer): ?>
+                                    <option value="<?= $customer->id ?>" <?= set_select('customer_id', $customer->id) ?>>
+                                        <?= esc($customer->username ?? $customer->email) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <?php endif; ?>
+
+                        <div>
+                            <label for="priority" class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                            <select
+                                name="priority"
+                                id="priority"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                            >
+                                <option value="low" <?= set_select('priority', 'low') ?>>Low</option>
+                                <option value="normal" <?= set_select('priority', 'normal', true) ?>>Normal</option>
+                                <option value="high" <?= set_select('priority', 'high') ?>>High</option>
+                            </select>
                         </div>
 
                         <div>

@@ -9,20 +9,42 @@ class TicketModel extends Model
     protected $table         = 'tickets';
     protected $primaryKey    = 'id';
 
-    // Add 'customer_id' to allowed fields
-    protected $allowedFields = ['title', 'status', 'created_by', 'customer_id', 'product_id']; // Added product_id as well as it's in your migration
+    protected $allowedFields = [
+        'title',
+        'status',
+        'created_by',
+        'customer_id',
+        'priority',
+    ];
 
     protected $useTimestamps = true;
     protected $dateFormat    = 'datetime';
 
     protected $validationRules = [
-        'title'      => 'required|min_length[3]|max_length[255]',
-        'status'     => 'required|in_list[open,closed,pending,customer replied,awaiting customer]',
-        'created_by' => 'required|integer',
-        // Add validation for customer_id. For customers, this will be auto-filled by their ID.
-        // For admins, it might be required or null depending on your exact business logic.
-        // For now, let's assume it's an integer if provided.
-        'customer_id' => 'permit_empty|integer', // 'permit_empty' allows it to be null or empty string, which is useful when not directly supplied by customer
+    // These are the rules for a CREATE action
+        'title'       => 'required|min_length[3]|max_length[255]',
+        'status'      => 'required|in_list[open,closed,pending,customer replied,awaiting customer]',
+        'created_by'  => 'required|integer|is_not_unique[users.id]',
+        'customer_id' => 'required|integer|is_not_unique[users.id]',
+        'priority'    => 'required|in_list[low,normal,high]',
+    ];
+
+    protected $validationGroups = [
+        // This is a group of rules for an UPDATE action
+        'update' => [
+            'title'       => 'permit_empty|min_length[3]|max_length[255]',
+            'status'      => 'permit_empty|in_list[open,customer replied,awaiting customer,closed]',
+            'priority'    => 'permit_empty|in_list[low,normal,high]',
+            'customer_id' => 'permit_empty|integer|is_not_unique[users.id]',
+        ],
+        // The default rules can also be put in a group
+        'create' => [
+            'title'       => 'required|min_length[3]|max_length[255]',
+            'status'      => 'required|in_list[open,customer replied,awaiting customer,closed]',
+            'priority'    => 'required|in_list[low,normal,high]',
+            'customer_id' => 'required|integer|is_not_unique[users.id]',
+            'created_by'  => 'required|integer|is_not_unique[users.id]',
+        ],
     ];
 
     protected $validationMessages = [
@@ -32,10 +54,26 @@ class TicketModel extends Model
         ],
         'status' => [
             'required' => 'Please select a status.',
-            'in_list'  => 'Status must be one of: open, closed, customer replied, awaiting customer.', // Updated list based on your migration
+            'in_list'  => 'Status must be one of: open, closed, customer replied, awaiting customer.',
+        ],
+        'priority' => [
+            'required' => 'Please select a priority.',
+            'in_list'  => 'Priority must be one of: low, normal, high.',
         ],
         'customer_id' => [
-            'integer' => 'Customer ID must be an integer.',
+            'required'      => 'Customer is required.',
+            'integer'       => 'Customer ID must be an integer.',
+            'is_not_unique' => 'Selected customer does not exist.',
+        ],
+        'created_by' => [
+            'required'      => 'Creator is required.',
+            'integer'       => 'Creator ID must be an integer.',
+            'is_not_unique' => 'Creator user does not exist.',
         ],
     ];
+
+    public function getAllowedFields()
+    {
+        return $this->allowedFields;
+    }
 }

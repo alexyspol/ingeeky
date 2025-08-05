@@ -29,7 +29,7 @@
                 </div>
             <?php endif; ?>
 
-            <form action="<?= route_to('admin.user.create') ?>" method="post">
+            <form action="<?= url_to('users.create') ?>" method="post">
                 <?= csrf_field() ?>
 
                 <div class="grid grid-cols-1 gap-6">
@@ -55,11 +55,6 @@
                         <input type="password" id="password" name="password"
                                class="w-full px-4 py-3 rounded-lg border border-gray-300 transition duration-150 ease-in-out"
                                placeholder="••••••••" required>
-                        <button type="button" id="passwordToggle"
-                                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                                onclick="togglePassword('password')">
-                            <i class="fas fa-eye"></i>
-                        </button>
                     </div>
 
                     <!-- Confirm Password -->
@@ -68,11 +63,6 @@
                         <input type="password" id="password_confirm" name="password_confirm"
                                class="w-full px-4 py-3 rounded-lg border border-gray-300 transition duration-150 ease-in-out"
                                placeholder="••••••••" required>
-                        <button type="button" id="passwordConfirmToggle"
-                                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                                onclick="togglePassword('password_confirm')">
-                            <i class="fas fa-eye"></i>
-                        </button>
                     </div>
 
                     <!-- Group Selection -->
@@ -99,7 +89,7 @@
                                focus:ring-2 focus:ring-red-400 focus:ring-offset-2 md:flex-1">
                         Create User
                     </button>
-                    <a href="<?= route_to('admin.users.index') ?>"
+                    <a href="<?= url_to('users.index') ?>"
                        class="inline-flex justify-center items-center py-3 px-6 border border-gray-300 shadow-sm text-base
                           font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none
                           focus:ring-2 focus:ring-offset-2 focus:ring-red-400 md:flex-1">
@@ -109,22 +99,4 @@
             </form>
         </div>
     </div>
-
-    <script>
-        function togglePassword(fieldId) {
-            const field = document.getElementById(fieldId);
-            const button = document.getElementById(fieldId + 'Toggle');
-            const icon = button.querySelector('i');
-
-            if (field.type === "password") {
-                field.type = "text";
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-            } else {
-                field.type = "password";
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            }
-        }
-    </script>
 <?= $this->endSection() ?>

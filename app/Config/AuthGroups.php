@@ -79,6 +79,10 @@ class AuthGroups extends ShieldAuthGroups
         'users.edit'          => 'Can edit existing non-admin users',
         'users.delete'        => 'Can delete existing non-admin users',
         'beta.access'         => 'Can access beta-level features',
+        'tickets.access'      => 'Can access tickets features',
+        'tickets.create'      => 'Can create new tickets',
+        'tickets.edit'        => 'Can edit existing tickets',
+        'tickets.delete'      => 'Can delete existing tickets',
     ];
 
     /**
@@ -109,7 +113,9 @@ class AuthGroups extends ShieldAuthGroups
             'users.edit',
             'beta.access',
         ],
-        'user' => [],
+        'user' => [
+            'tickets.access'
+        ],
         'beta' => [
             'beta.access',
         ],

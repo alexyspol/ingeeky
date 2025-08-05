@@ -25,6 +25,18 @@ class Profile extends Entity
     // Define mutators (setters) if you need to modify data before saving.
     // Example: public function setFirstName(string $name) { $this->attributes['first_name'] = ucwords($name); }
 
-    // Define accessors (getters) if you need to format data when retrieving.
-    // Example: public function getFullName() { return $this->attributes['first_name'] . ' ' . $this->attributes['last_name']; }
+    public function getFullName(): ?string
+    {
+        $firstName = $this->attributes['first_name'] ?? '';
+        $lastName  = $this->attributes['last_name'] ?? '';
+
+        $fullName = trim("{$firstName} {$lastName}");
+
+        // If the resulting string is empty, return null
+        if (empty($fullName)) {
+            return null;
+        }
+
+        return $fullName;
+    }
 }

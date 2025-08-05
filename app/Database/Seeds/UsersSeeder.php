@@ -36,7 +36,7 @@ class UsersSeeder extends Seeder
                 'password' => 'password',
             ]);
 
-            $users->save($user);
+            $users->save($user, 'create');
             $savedUser = $users->findById($users->getInsertID());
             $savedUser->addGroup($data['group']);
 

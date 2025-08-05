@@ -13,7 +13,7 @@
                           placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-200
                           focus:border-red-500 transition-colors duration-200"
                            placeholder="Search users...">
-                    <a href="<?= route_to('admin.user.new') ?>" class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors">
+                    <a href="<?= url_to('users.new') ?>" class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors">
                         <i class="fas fa-plus mr-2"></i>
                         Add User
                     </a>
@@ -69,11 +69,12 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
                                     <div class="flex items-center justify-end space-x-3">
-                                        <a href="<?= route_to('admin.user.edit', $user->id) ?>" class="text-slate-600 hover:text-slate-900">
+                                        <a href="<?= url_to('users.edit', $user->id) ?>" class="text-slate-600 hover:text-slate-900">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <form action="<?= route_to('admin.user.delete', $user->id) ?>" method="post" class="inline-block">
+                                        <form action="<?= url_to('users.delete', $user->id) ?>" method="post" class="inline-block">
                                             <?= csrf_field() ?>
+                                            <input type="hidden" name="_method" value="DELETE">
                                             <button type="submit" class="text-red-600 hover:text-red-900"
                                                     onclick="return confirm('Are you sure you want to delete this user?')">
                                                 <i class="fas fa-trash-alt"></i>

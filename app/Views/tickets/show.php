@@ -19,7 +19,7 @@
                             <div class="bg-gray-50 rounded-lg p-4">
                                 <div class="flex items-center mb-2">
                                     <div class="font-medium text-gray-700">
-                                        User #<?= esc($msg['user_id']) ?>
+                                        <?= esc($msg['sender']->getProfile()->getFullName()) ?? $msg['sender']->username ?>
                                     </div>
                                     <span class="text-gray-400 text-sm ml-4">
                                     <?= esc($msg['created_at']) ?>
@@ -37,7 +37,7 @@
             <div>
                 <h4 class="text-lg font-semibold text-gray-700 mb-4">Post a Reply</h4>
 
-                <form method="post" action="/ticket-messages" class="space-y-4">
+                <form method="post" action="<?= url_to('tickets.reply', $ticket['id']) ?>" class="space-y-4">
                     <?= csrf_field() ?>
                     <input type="hidden" name="ticket_id" value="<?= esc($ticket['id']) ?>">
 

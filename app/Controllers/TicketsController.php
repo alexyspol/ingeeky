@@ -2,8 +2,8 @@
 
 namespace App\Controllers;
 
+use App\Controllers\BaseController;
 use CodeIgniter\Exceptions\PageNotFoundException;
-
 use App\Models\TicketModel;
 use App\Models\UserModel;
 use App\Models\TicketMessageModel;
@@ -24,140 +24,257 @@ class TicketsController extends BaseController
     // GET /tickets
     public function index()
     {
-        $userId = auth()->id();
-        $data['tickets'] = $this->ticketModel->where('customer_id', $userId)->findAll();
+        if(auth()->user()->can('admin.access')) {
+            $data['tickets'] = $this->ticketModel->findAll();
+        } else {
+            $userId = auth()->id();
+            $data['tickets'] = $this->ticketModel->where('customer_id', $userId)->findAll();
+        }
+
         return view('tickets/index', $data);
     }
 
     // GET /tickets/new
     public function new()
     {
-        return view('tickets/new');
+        helper('form');
+
+        if(auth()->user()->can('admin.access')) {
+            $data['customers'] = $this->userModel->getUsersByGroupName('user');
+        }
+
+        return view('tickets/new', $data ?? []);
     }
 
     // POST /tickets
     public function create()
     {
         $post = $this->request->getPost();
-        $userId = auth()->id();
 
-        // Validation (can be more robust using $this->validate() method)
+        if(auth()->user()->can('admin.access')) {
+            $post['customer_id'] = (int) $post['customer_id'];
+        } else {
+            $post['customer_id'] = auth()->id();
+        }
+
         if (!$this->ticketModel->validate($post)) {
             return redirect()->back()->withInput()->with('errors', $this->ticketModel->errors());
         }
+
+        $creatorId = auth()->id();
+
+        // Start a database transaction
+        $db = \Config\Database::connect();
+        $db->transBegin();
 
         // 1. Create the ticket
         $ticketData = [
             'title'       => $post['title'],
             'status'      => 'open',
-            'created_by'  => $userId,   // Customer creating the ticket
-            'customer_id' => $userId,   // Ticket is for this customer
-            'product_id'  => $post['product_id'] ?? null, // Optional product association
+            'priority'    => $post['priority'],
+            'created_by'  => $creatorId,
+            'customer_id' => $post['customer_id'],
         ];
 
         $ticketId = $this->ticketModel->insert($ticketData);
 
         if (!$ticketId) {
-            return redirect()->back()->withInput()->with('error', 'Could not create ticket. Please try again.');
+            return redirect()->back()->withInput()->with('error', 'Could not create ticket.');
         }
 
         // 2. Create the first message
         $messageData = [
             'ticket_id' => $ticketId,
-            'user_id'   => $userId, // Customer sending the message
+            'user_id'   => $creatorId,
             'message'   => $post['message'],
         ];
 
-        if (!$this->ticketMessageModel->insert($messageData)) {
-            // Optional: Handle if message insertion fails, maybe delete the ticket or log error
-            return redirect()->to('/tickets/' . $ticketId)->with('warning', 'Ticket created but message failed to save.');
+        $messageId = $this->ticketMessageModel->insert($messageData);
+
+        // If message creation fails, rollback and return
+        if (!$messageId) {
+            $db->transRollback();
+            return redirect()->back()->withInput()->with('error', 'Ticket created but initial message failed to save. Rolled back.');
         }
 
-        return redirect()->to('/tickets/' . $ticketId)->with('message', 'Ticket created successfully.');
+        // If both operations succeeded, commit the transaction
+        $db->transCommit();
+
+        return redirect()->to(url_to('tickets.index', $ticketId))->with('message', 'Ticket created successfully.');
     }
 
     // GET /tickets/{id}
     public function show($id = null)
     {
-        $ticketModel = new TicketModel();
-        $ticket = $ticketModel->find($id);
+        $ticket = $this->ticketModel->find($id);
 
         if (!$ticket) {
             throw PageNotFoundException::forPageNotFound("Ticket not found");
         }
 
-        $messageModel = new TicketMessageModel();
-        $messages = $messageModel->where('ticket_id', $id)
-                                ->orderBy('created_at', 'asc')
-                                ->findAll();
+        $messages = $this->ticketMessageModel->where('ticket_id', $id)
+                                             ->orderBy('created_at', 'asc')
+                                             ->findAll();
 
-        // Initialize an array to store unique user IDs from messages
-        $userIds = [];
-        foreach ($messages as $msg) {
-            $userIds[] = $msg['user_id'];
-        }
+        $userIds = array_unique(array_map(function ($message) {
+            return $message['user_id'];
+        }, $messages));
 
-        // Get unique user IDs to avoid fetching the same user multiple times
-        $userIds = array_unique($userIds);
-
-        // Fetch user entities for all unique user IDs
-        $userModel = new UserModel(); // Use your custom UserModel
-        $users = $userModel->find($userIds); // find() can accept an array of IDs
-
-        // Create a map of user_id to User entity for easy lookup
         $usersMap = [];
-        foreach ($users as $user) {
-            $usersMap[$user->id] = $user;
+        if (!empty($userIds)) {
+            $users = $this->userModel->find($userIds);
+            foreach ($users as $user) {
+                $usersMap[$user->id] = $user;
+            }
         }
 
-        // Attach sender's profile data to each message
-        // We'll iterate through messages and add a 'sender' key
-        // containing the User entity (which has the getProfile() method)
-        $messagesWithSender = [];
-        foreach ($messages as $msg) {
+        // Attach the sender user object to each message
+        foreach ($messages as $key => $msg) {
+            // Check if the user exists in our map before attaching
             if (isset($usersMap[$msg['user_id']])) {
-                $msg['sender'] = $usersMap[$msg['user_id']];
+                // Attach the user object directly to the message object
+                $messages[$key]['sender'] = $usersMap[$msg['user_id']];
             } else {
-                // Handle cases where a user might not be found (e.g., deleted user)
-                $msg['sender'] = null;
+                // Handle cases where sender might not be found (optional)
+                $messages[$key]['sender'] = null;
             }
-            $messagesWithSender[] = $msg;
         }
 
         return view('tickets/show', [
             'ticket'   => $ticket,
-            'messages' => $messagesWithSender,
+            'messages' => $messages,
         ]);
     }
 
     // GET /tickets/{id}/edit
     public function edit($id = null)
     {
+        helper('form');
+
         $ticket = $this->ticketModel->find($id);
 
         if (!$ticket) {
             throw PageNotFoundException::forPageNotFound("Ticket with ID $id not found");
         }
 
-        return view('tickets/edit', ['ticket' => $ticket]);
+        $data['ticket'] = $ticket;
+
+        if(auth()->user()->can('admin.access')) {
+            $data['customers'] = $this->userModel->getUsersByGroupName('user'); // Admins can reassign customers
+        }
+
+        return view('tickets/edit', $data);
     }
 
-    // PUT/PATCH /tickets/{id}
-    public function update($id = null)
+    // PATCH /tickets/{id}
+    public function update($ticketId = null)
     {
+        // 1. Get the raw input data from the PATCH request
         $data = $this->request->getRawInput();
 
-        // Add validation here if needed
+        // 2. Find the ticket and perform a security check
+        $ticket = $this->ticketModel->find($ticketId);
 
-        $this->ticketModel->update($id, $data);
+        if (empty($ticket)) {
+            return redirect()->back()->with('error', 'Ticket not found.');
+        }
 
-        return redirect()->to("/tickets/$id")->with('message', 'Ticket updated successfully');
+        // You should add a permission check here, similar to your close() method
+        // For example:
+        // if (! auth()->user()->can('admin.access')) {
+        //     return redirect()->back()->with('error', 'You do not have permission to update this ticket.');
+        // }
+
+        // 3. Validate the data using the 'update' validation group
+        // Note the use of $this->ticketModel->validate() and $this->ticketModel->errors()
+        if (!$this->ticketModel->validate($data, 'update')) {
+            return redirect()->back()->with('errors', $this->ticketModel->errors());
+        }
+
+        // 4. Filter out any fields not allowed in the model
+        $updateData = array_intersect_key($data, array_flip($this->ticketModel->getAllowedFields()));
+
+        // 5. Update the ticket
+        $this->ticketModel->update($ticketId, $updateData);
+
+        // 6. Redirect to the ticket's show page with a success message
+        // Note the corrected route name 'tickets.show'
+        return redirect()->to(url_to('tickets.show', $ticketId))->with('message', 'Ticket updated successfully.');
     }
 
     // DELETE /tickets/{id}
-    public function delete($id = null)
+    public function delete($ticketId = null)
     {
-        $this->ticketModel->delete($id);
-        return redirect()->to('/tickets')->with('message', 'Ticket deleted successfully');
+        $ticket = $this->ticketModel->find($ticketId);
+
+        if (!$ticket) {
+            return redirect()->to(url_to('tickets.index'))->with('error', 'Ticket not found.');
+        }
+
+        $this->ticketModel->delete($ticketId);
+        return redirect()->to(url_to('tickets.index'))->with('message', 'Ticket deleted successfully');
+    }
+
+    // POST /tickets/{id}/reply
+    public function reply($ticketId = null)
+    {
+        $ticket = $this->ticketModel->find($ticketId);
+
+        if (!$ticket) {
+            throw PageNotFoundException::forPageNotFound("Ticket not found.");
+        }
+
+        $post = $this->request->getPost();
+        $creatorId = auth()->id();
+
+        if (!$this->ticketMessageModel->validate($post)) {
+            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        }
+
+        $messageData = [
+            'ticket_id' => $ticketId,
+            'user_id'   => $creatorId,
+            'message'   => $post['message'],
+        ];
+
+        $this->ticketMessageModel->insert($messageData);
+
+        // Determine user group
+        $user   = auth()->user();
+        $groups = $user->getGroups();
+
+        $newStatus = in_array('user', $groups)
+            ? 'customer replied'
+            : 'awaiting customer';
+
+        // Update ticket status
+        $this->ticketModel->update($ticketId, [
+            'status' => $newStatus,
+        ]);
+
+        return redirect()->to(url_to('tickets.show', $ticketId))->with('message', 'Reply sent successfully.');
+    }
+
+    // PATCH /tickets/{id}/close
+    public function close($ticketId)
+    {
+        $ticket = $this->ticketModel->find($ticketId);
+
+        if ($ticket === null) {
+            return redirect()->back()->with('error', 'Ticket not found.');
+        }
+
+        // Check if the ticket is already closed to avoid unnecessary updates
+        if ($ticket['status'] === 'closed') {
+            return redirect()->back()->with('message', 'This ticket is already closed.');
+        }
+
+        $updated = $this->ticketModel->update($ticketId, ['status' => 'closed']);
+
+        if ($updated) {
+            return redirect()->back()->with('message', 'Ticket closed successfully.');
+        }
+
+        return redirect()->back()->with('error', 'An error occurred while trying to close the ticket.');
     }
 }
