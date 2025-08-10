@@ -112,6 +112,23 @@
                         My Tickets
                     </a>
 
+                <?php if (auth()->loggedIn()): ?>
+                    <script>
+                        // Update user activity every minute
+                        function updateActivity() {
+                            fetch('/admin/dashboard/update-activity', {
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                }
+                            }).catch(console.error);
+                        }
+
+                        // Update immediately and then every minute
+                        updateActivity();
+                        setInterval(updateActivity, 60000);
+                    </script>
+                <?php endif; ?>
+
                     <!-- Profile Dropdown -->
                     <div class="relative" x-data="{ open: false }">
                         <button @click="open = !open"
@@ -127,7 +144,6 @@
                         <!-- Dropdown Menu -->
                         <div x-cloak
                              x-show="open"
-                             x-cloak
                              @click.away="open = false"
                              @keydown.escape.window="open = false"
                              class="absolute right-0 mt-2 w-48 rounded-xl bg-white dark:bg-gray-800 shadow-lg border border-gray-100 dark:border-gray-700 py-1"
@@ -138,41 +154,16 @@
                              x-transition:leave-start="opacity-100 scale-100"
                              x-transition:leave-end="opacity-0 scale-95">
 
-
                             <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
                                 <p class="text-sm font-medium text-gray-900 dark:text-white"><?= auth()->user()->username ?></p>
                                 <p class="text-sm text-gray-500 dark:text-gray-400"><?= auth()->user()->email ?></p>
                             </div>
-
-                            <a href="/profile" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-red-500">
-                                <i class="fas fa-user-circle w-5 mr-2"></i>My Profile
-                            </a>
-
-                            <a href="/account/settings" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-red-500">
-                                <i class="fas fa-cog w-5 mr-2"></i>Account Settings
-                            </a>
 
                             <?php if (auth()->user()->inGroup('admin')): ?>
                                 <a href="/admin/dashboard" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-red-500">
                                     <i class="fas fa-shield-alt w-5 mr-2"></i>Admin Dashboard
                                 </a>
                             <?php endif; ?>
-
-                            <!-- Dark Mode Toggle -->
-                            <div class="border-t border-gray-100 dark:border-gray-700">
-                                <button @click="darkMode = !darkMode"
-                                        class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-red-500 flex items-center">
-                                    <i class="fas fa-moon w-5 mr-2" :class="darkMode ? 'text-red-500' : ''"></i>
-                                    <span>Dark Mode</span>
-                                    <div class="ml-auto">
-                                        <div class="relative inline-flex h-5 w-9 items-center rounded-full bg-gray-200 dark:bg-gray-700"
-                                             :class="{ 'bg-red-500': darkMode }">
-                                            <div class="absolute h-4 w-4 transform rounded-full bg-white transition-transform"
-                                                 :class="darkMode ? 'translate-x-4' : 'translate-x-1'"></div>
-                                        </div>
-                                    </div>
-                                </button>
-                            </div>
 
                             <div class="border-t border-gray-100 dark:border-gray-700">
                                 <form action="/logout" method="get" class="block">
@@ -183,7 +174,7 @@
                                 </form>
                             </div>
                         </div>
-                    </div>
+
                 <?php else: ?>
                     <a href="<?= url_to('login') ?>" class="px-4 py-2 rounded-lg <?= $currentPath === '/login' ? 'bg-red-700 shadow-lg' : 'bg-red-600 hover:bg-red-700' ?> text-white transition-colors shadow-md hover:shadow-lg">
                         Login

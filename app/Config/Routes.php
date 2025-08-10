@@ -44,6 +44,14 @@ $routes->group('profiles', ['filter' => 'session'], static function ($routes) {
     $routes->post('update', 'ProfilesController::update', ['as' => 'profiles.update']);
 });
 
+// Admin routes
+$routes->group('admin', ['filter' => 'group:admin'], function($routes) {
+    $routes->get('dashboard', 'Admin\DashboardController::index', ['as' => 'admin.dashboard']);
+    $routes->get('dashboard/stats', 'Admin\DashboardController::getStats');
+    $routes->post('dashboard/update-activity', 'Admin\DashboardController::updateUserActivity');
+});
+
+
 $routes->group('users', ['filter' => 'permission:admin.access'], function ($routes) {
     $routes->get('/', 'UsersController::index', ['as' => 'users.index']);
     $routes->post('/', 'UsersController::create', ['as' => 'users.create']);
