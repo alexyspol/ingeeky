@@ -10,12 +10,20 @@
                     <h1 class="text-3xl font-bold text-gray-900 mb-2">Support Tickets</h1>
                     <p class="text-gray-600">Manage and track all your support requests</p>
                 </div>
-                <a href="<?= url_to('tickets.new') ?>" class="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
-                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    New Ticket
-                </a>
+                <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+                    <input type="text"
+                           id="ticketSearch"
+                           class="flex-1 py-2 px-4 border border-gray-200 rounded-lg bg-gray-50 text-sm
+                      placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-200
+                      focus:border-red-500 transition-colors"
+                           placeholder="Search tickets...">
+                    <a href="<?= url_to('tickets.new') ?>" class="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
+                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        New Ticket
+                    </a>
+                </div>
             </div>
 
             <!-- Stats Cards -->
@@ -137,8 +145,8 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
                                         <!-- View Button -->
                                         <a href="<?= url_to('tickets.show', $ticket['id']) ?>"
-                                            class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700 transition-colors"
-                                            title="View Ticket">
+                                           class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700 transition-colors"
+                                           title="View Ticket">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -146,26 +154,26 @@
                                         </a>
 
                                         <?php if($ticket['status'] !== 'closed'): ?>
-                                        <!-- Close Button -->
-                                        <form action="<?= url_to('tickets.close', $ticket['id']) ?>" method="post" class="inline-flex" onsubmit="return confirm('Are you sure you want to close this ticket?');">
-                                            <?= csrf_field() ?>
-                                            <input type="hidden" name="_method" value="PATCH">
-                                            <button type="submit"
-                                                    class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700 transition-colors"
-                                                    title="Close Ticket">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
-                                                </svg>
-                                            </button>
-                                        </form>
+                                            <!-- Close Button -->
+                                            <form action="<?= url_to('tickets.close', $ticket['id']) ?>" method="post" class="inline-flex" onsubmit="return confirm('Are you sure you want to close this ticket?');">
+                                                <?= csrf_field() ?>
+                                                <input type="hidden" name="_method" value="PATCH">
+                                                <button type="submit"
+                                                        class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700 transition-colors"
+                                                        title="Close Ticket">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
+                                            </form>
                                         <?php endif; ?>
 
                                         <?php if (auth()->user()->can('admin.access')) : ?>
 
                                             <!-- Edit Button -->
                                             <a href="<?= url_to('tickets.edit', $ticket['id']) ?>"
-                                                class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-yellow-50 text-yellow-600 hover:bg-yellow-100 hover:text-yellow-700 transition-colors"
-                                                title="Edit Ticket">
+                                               class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-yellow-50 text-yellow-600 hover:bg-yellow-100 hover:text-yellow-700 transition-colors"
+                                               title="Edit Ticket">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                 </svg>
@@ -176,8 +184,8 @@
                                                 <?= csrf_field() ?>
                                                 <input type="hidden" name="_method" value="DELETE">
                                                 <button type="submit"
-                                                    class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 transition-colors"
-                                                    title="Delete Ticket">
+                                                        class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 transition-colors"
+                                                        title="Delete Ticket">
                                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1H9a1 1 0 00-1 1v3m0 0h8" />
                                                     </svg>
@@ -212,5 +220,54 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.getElementById('ticketSearch')?.addEventListener('input', function() {
+            const searchQuery = this.value.toLowerCase();
+            const tableRows = document.querySelectorAll('tbody tr:not([colspan])');
+            let totalVisible = 0, openCount = 0, closedCount = 0;
+
+            tableRows.forEach(row => {
+                const title = row.querySelector('td:nth-child(1) .text-gray-900')?.textContent.toLowerCase() || '';
+                const ticketId = row.querySelector('td:nth-child(1) .text-gray-500')?.textContent.toLowerCase() || '';
+                const status = row.querySelector('td:nth-child(2) span')?.textContent.toLowerCase() || '';
+                const priority = row.querySelector('td:nth-child(3)')?.textContent.toLowerCase() || '';
+                const date = row.querySelector('td:nth-child(4)')?.textContent.toLowerCase() || '';
+
+                const matchesSearch = title.includes(searchQuery) ||
+                    ticketId.includes(searchQuery) ||
+                    status.includes(searchQuery) ||
+                    priority.includes(searchQuery) ||
+                    date.includes(searchQuery);
+
+                row.style.display = matchesSearch ? '' : 'none';
+
+                if (matchesSearch) {
+                    totalVisible++;
+                    if (status.includes('open')) openCount++;
+                    if (status.includes('closed')) closedCount++;
+                }
+            });
+
+            // Update the stats cards
+            const statsElements = document.querySelectorAll('.text-2xl.font-bold.text-gray-900');
+            if (statsElements.length >= 3) {
+                statsElements[0].textContent = totalVisible;  // Total tickets
+                statsElements[1].textContent = openCount;     // Open tickets
+                statsElements[2].textContent = closedCount;   // Resolved tickets
+            }
+        });
+    </script>
+
+    <style>
+        .container { user-select: none; cursor: default; }
+        table:focus, td:focus, tr:focus, th:focus { outline: none !important; }
+        td, th { pointer-events: none; }
+        td a, td button, td form, .container a, .container button {
+            pointer-events: auto;
+            cursor: pointer;
+        }
+        #ticketSearch { user-select: text; cursor: text; }
+    </style>
 
 <?= $this->endSection() ?>
