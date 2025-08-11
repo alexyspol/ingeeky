@@ -127,22 +127,27 @@
                 <div class="p-6">
                     <div class="flow-root">
                         <ul role="list" class="-mb-8" id="activityFeed">
-                            <?php foreach ($recentActivity ?? [] as $activity): ?>
+                            <?php foreach ($recentActivity ?? [] as $index => $activity): ?>
                                 <li>
                                     <div class="relative pb-8">
-                                        <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200 dark:bg-gray-700"></span>
+                                        <?php if (count($recentActivity) > 1 && $index < count($recentActivity) - 1): ?>
+                                            <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200 dark:bg-gray-700"></span>
+                                        <?php endif; ?>
                                         <div class="relative flex space-x-3">
                                             <div>
-                                            <span class="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center ring-8 ring-white dark:ring-gray-800">
-                                                <i class="fas fa-<?= $activity->icon ?? 'circle' ?> text-gray-600 dark:text-gray-400"></i>
-                                            </span>
+                                                <span class="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center ring-8 ring-white dark:ring-gray-800">
+                                                    <i class="fas fa-history text-gray-600 dark:text-gray-400"></i>
+                                                </span>
                                             </div>
                                             <div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
                                                 <div>
-                                                    <p class="text-sm text-gray-500 dark:text-gray-400"><?= esc($activity->description ?? '') ?></p>
+                                                    <p class="text-sm text-gray-500 dark:text-gray-400" data-activity-action>
+                                                        <strong><?= $activity['display_name'] ?></strong>
+                                                        <?= $activity['action'] ?>
+                                                    </p>
                                                 </div>
                                                 <div class="text-right text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
-                                                    <?= $activity->created_at ? date('d M H:i', strtotime($activity->created_at)) : '' ?>
+                                                    <?= date('d M H:i', strtotime($activity['created_at'])) ?>
                                                 </div>
                                             </div>
                                         </div>
@@ -156,6 +161,19 @@
         </div>
     </div>
 
+        <style>
+            [data-activity-action] a {
+                color: #2563eb; /* Tailwind blue-600 */
+                text-decoration: underline;
+                transition: color 0.2s ease;
+            }
+
+            [data-activity-action] a:hover,
+            [data-activity-action] a:focus {
+                color: #1e40af; /* Tailwind blue-800 */
+                outline: none;
+            }
+        </style>
 
         <script>
             function updateDashboard() {

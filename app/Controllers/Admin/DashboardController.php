@@ -5,6 +5,7 @@ namespace App\Controllers\Admin;
 use App\Controllers\BaseController;
 use App\Models\UserModel;
 use App\Models\TicketModel;
+use App\Models\UserActivityModel;
 
 class DashboardController extends BaseController
 {
@@ -62,6 +63,19 @@ class DashboardController extends BaseController
             'pendingTickets' => $ticketStats['awaiting'],
             'recentActivity' => $this->getRecentActivity()
         ];
+
+        $activityModel = new UserActivityModel();
+        $data['recentActivity'] = $activityModel->getRecent(15);
+
+        foreach ($data['recentActivity'] as &$activity) {
+            $user = $this->userModel->find($activity['user_id']);
+            if ($user) {
+                $activity['display_name'] = $user->fullname ?: $user->username;
+            } else {
+                $activity['display_name'] = 'Unknown User';
+            }
+        }
+        unset($activity);
 
         return view('dashboard/index', $data);
     }

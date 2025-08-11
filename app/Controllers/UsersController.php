@@ -53,6 +53,8 @@ class UsersController extends BaseController
                 throw new \Exception('Transaction failed');
             }
 
+            log_activity("created user: {$user->username} (ID: {$user->id})");
+
             return redirect()->to(route_to('users.index'))->with('message', 'User created successfully.');
         } catch (\Throwable $e) {
             $db->transRollback();
@@ -102,6 +104,8 @@ class UsersController extends BaseController
             return redirect()->back()->withInput()->with('errors', $this->userModel->errors());
         }
 
+        log_activity("updated user: {$user->username} (ID: {$user->id})");
+
         return redirect()->to(route_to('users.index'))->with('message', 'User updated successfully.');
     }
 
@@ -110,6 +114,8 @@ class UsersController extends BaseController
         if (! $this->userModel->delete($userId, true)) {
             return redirect()->back()->with('error', 'Failed to delete user.');
         }
+
+        log_activity("deleted user: {$user->username} (ID: {$user->id})");
 
         return redirect()->to(route_to('users.index'))->with('message', 'User deleted successfully.');
     }

@@ -100,19 +100,21 @@ class TicketsController extends BaseController
         // If both operations succeeded, commit the transaction
         $db->transCommit();
 
+        log_activity("created <a href='" . url_to('tickets.show', $ticketId) . "'>Ticket #{$ticketId}</a>");
+
         return redirect()->to(url_to('tickets.index', $ticketId))->with('message', 'Ticket created successfully.');
     }
 
     // GET /tickets/{id}
-    public function show($id = null)
+    public function show($ticketId = null)
     {
-        $ticket = $this->ticketModel->find($id);
+        $ticket = $this->ticketModel->find($ticketId);
 
         if (!$ticket) {
             throw PageNotFoundException::forPageNotFound("Ticket not found");
         }
 
-        $messages = $this->ticketMessageModel->where('ticket_id', $id)
+        $messages = $this->ticketMessageModel->where('ticket_id', $ticketId)
                                              ->orderBy('created_at', 'asc')
                                              ->findAll();
 
@@ -140,6 +142,8 @@ class TicketsController extends BaseController
             }
         }
 
+        log_activity("viewed <a href='" . url_to('tickets.show', $ticketId) . "'>Ticket #{$ticketId}</a>");
+
         return view('tickets/show', [
             'ticket'   => $ticket,
             'messages' => $messages,
@@ -147,14 +151,14 @@ class TicketsController extends BaseController
     }
 
     // GET /tickets/{id}/edit
-    public function edit($id = null)
+    public function edit($ticketId = null)
     {
         helper('form');
 
-        $ticket = $this->ticketModel->find($id);
+        $ticket = $this->ticketModel->find($ticketId);
 
         if (!$ticket) {
-            throw PageNotFoundException::forPageNotFound("Ticket with ID $id not found");
+            throw PageNotFoundException::forPageNotFound("Ticket with ID $ticketId not found");
         }
 
         $data['ticket'] = $ticket;
@@ -197,6 +201,8 @@ class TicketsController extends BaseController
         // 5. Update the ticket
         $this->ticketModel->update($ticketId, $updateData);
 
+        log_activity("updated <a href='" . url_to('tickets.show', $ticketId) . "'>Ticket #{$ticketId}</a>");
+
         // 6. Redirect to the ticket's show page with a success message
         // Note the corrected route name 'tickets.show'
         return redirect()->to(url_to('tickets.show', $ticketId))->with('message', 'Ticket updated successfully.');
@@ -212,6 +218,9 @@ class TicketsController extends BaseController
         }
 
         $this->ticketModel->delete($ticketId);
+
+        log_activity("deleted <a href='" . url_to('tickets.show', $ticketId) . "'>Ticket #{$ticketId}</a>");
+
         return redirect()->to(url_to('tickets.index'))->with('message', 'Ticket deleted successfully');
     }
 
@@ -252,6 +261,8 @@ class TicketsController extends BaseController
             'status' => $newStatus,
         ]);
 
+        log_activity("replied to <a href='" . url_to('tickets.show', $ticketId) . "'>Ticket #{$ticketId}</a>");
+
         return redirect()->to(url_to('tickets.show', $ticketId))->with('message', 'Reply sent successfully.');
     }
 
@@ -274,6 +285,8 @@ class TicketsController extends BaseController
         if ($updated) {
             return redirect()->back()->with('message', 'Ticket closed successfully.');
         }
+
+        log_activity("closed <a href='" . url_to('tickets.show', $ticketId) . "'>Ticket #{$ticketId}</a>");
 
         return redirect()->back()->with('error', 'An error occurred while trying to close the ticket.');
     }
