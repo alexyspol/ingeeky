@@ -157,8 +157,8 @@
     </div>
 
 
-        <script>
-            function updateDashboard() {
+    <script>
+        function updateDashboard() {
             fetch('/admin/dashboard/stats', {
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest'
@@ -170,7 +170,12 @@
                         // Update stats
                         document.querySelector('[data-stat="onlineUsers"]').textContent = data.stats.onlineUsers;
                         document.querySelector('[data-stat="activeTickets"]').textContent = data.stats.ticketStats.open;
-                        document.querySelector('[data-stat="pendingTickets"]').textContent = data.stats.ticketStats.awaiting;
+
+                        // Calculate pending tickets (both awaiting customer and awaiting response)
+                        const pendingCount = (data.stats.ticketStats['awaiting customer'] || 0) +
+                            (data.stats.ticketStats['awaiting response'] || 0);
+                        document.querySelector('[data-stat="pendingTickets"]').textContent = pendingCount;
+
                         document.querySelector('[data-stat="totalUsers"]').textContent = data.stats.userStatuses.length;
 
                         // Update user activity table
@@ -202,11 +207,11 @@
                 .catch(console.error);
         }
 
-            // Initial update
-            updateDashboard();
+        // Initial update
+        updateDashboard();
 
-            // Update every 5 seconds
-            setInterval(updateDashboard, 5000);
+        // Update every 5 seconds
+        setInterval(updateDashboard, 5000);
     </script>
 
 <?= $this->endSection() ?>

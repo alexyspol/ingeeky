@@ -120,16 +120,14 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <?php
-                                        $statusClass = 'bg-gray-100 text-gray-800';
-                                        if ($ticket['status'] === 'open') {
-                                            $statusClass = 'bg-red-100 text-red-800';
-                                        } elseif ($ticket['status'] === 'customer replied') {
-                                            $statusClass = 'bg-yellow-100 text-yellow-800';
-                                        } elseif ($ticket['status'] === 'awaiting customer') {
-                                            $statusClass = 'bg-blue-100 text-blue-800';
-                                        } elseif ($ticket['status'] === 'closed') {
-                                            $statusClass = 'bg-green-100 text-green-800';
-                                        }
+                                        $statusClass = match($ticket['status']) {
+                                            'open' => 'bg-red-100 text-red-800',
+                                            'customer replied' => 'bg-yellow-100 text-yellow-800',
+                                            'awaiting customer' => 'bg-blue-100 text-blue-800',
+                                            'awaiting response' => 'bg-blue-100 text-blue-800',
+                                            'closed' => 'bg-green-100 text-green-800',
+                                            default => 'bg-gray-100 text-gray-800'
+                                        };
                                         ?>
                                         <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full capitalize <?= $statusClass ?>">
                                             <?= esc($ticket['status']) ?>

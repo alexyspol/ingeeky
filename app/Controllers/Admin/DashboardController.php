@@ -112,7 +112,8 @@ class DashboardController extends BaseController
                 'total' => $this->ticketModel->countAll(),
                 'open' => $this->ticketModel->where('status', 'open')->countAllResults(),
                 'closed' => $this->ticketModel->where('status', 'closed')->countAllResults(),
-                'awaiting' => $this->ticketModel->where('status', 'awaiting')->countAllResults(),
+                'awaiting customer' => $this->ticketModel->where('status', 'awaiting customer')->countAllResults(),
+                'awaiting response' => $this->ticketModel->where('status', 'awaiting response')->countAllResults()
             ];
 
             return $this->response->setJSON([
