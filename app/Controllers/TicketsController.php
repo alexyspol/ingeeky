@@ -24,12 +24,37 @@ class TicketsController extends BaseController
     // GET /tickets
     public function index()
     {
-        if(auth()->user()->can('admin.access')) {
-            $data['tickets'] = $this->ticketModel->findAll();
+        // Get the current authenticated user.
+        $user = auth()->user();
+
+        // Initialize the query builder.
+        $query = $this->ticketModel;
+
+        // Check for admin permission first, which has the highest priority.
+        if ($user->can('admin.access')) {
+            // Admins can see all tickets.
+            $query = $query->findAll();
+        } elseif ($user->inGroup('user')) {
+            // 'user' group members (customers) can only see tickets they own.
+            $query = $query->where('customer_id', $user->id)->findAll();
         } else {
-            $userId = auth()->id();
-            $data['tickets'] = $this->ticketModel->where('customer_id', $userId)->findAll();
+            // All other users are assumed to be staff. Their groups directly correspond to departments.
+            $departmentGroups = $user->getGroups();
+            
+            // We filter out the 'user' group just in case to ensure we only get department names.
+            $departmentGroups = array_diff($departmentGroups, ['user']);
+
+            if (!empty($departmentGroups)) {
+                // Use a 'whereIn' clause to get all tickets for all of the user's department groups.
+                // For example, if a user's role is 'support', this will query for tickets where department = 'support'.
+                $query = $query->whereIn('department', $departmentGroups)->findAll();
+            } else {
+                // If the user isn't in any department groups, return an empty array.
+                $query = [];
+            }
         }
+
+        $data['tickets'] = $query;
 
         return view('tickets/index', $data);
     }
@@ -39,9 +64,11 @@ class TicketsController extends BaseController
     {
         helper('form');
 
-        if(auth()->user()->can('admin.access')) {
+        if(auth()->user()->can('tickets.assign_customer')) {
             $data['customers'] = $this->userModel->getUsersByGroupName('user');
         }
+
+        $data['departments'] = $this->getDepartments();
 
         return view('tickets/new', $data ?? []);
     }
@@ -50,6 +77,7 @@ class TicketsController extends BaseController
     public function create()
     {
         $post = $this->request->getPost();
+        $post['customer_id'] = (int) $post['customer_id'];
 
         if(auth()->user()->can('admin.access')) {
             $post['customer_id'] = (int) $post['customer_id'];
@@ -57,8 +85,23 @@ class TicketsController extends BaseController
             $post['customer_id'] = auth()->id();
         }
 
-        if (!$this->ticketModel->validate($post)) {
-            return redirect()->back()->withInput()->with('errors', $this->ticketModel->errors());
+        $authGroups = config('AuthGroups');
+        $departmentGroupNames = [];
+
+        foreach ($authGroups->groups as $groupName => $groupData) {
+            if (isset($groupData['department'])) {
+                $departmentGroupNames[] = $groupName;
+            }
+        }
+
+        // Convert the array of department group names into a comma-separated string
+        $departmentList = implode(',', $departmentGroupNames);
+
+        $rules = $this->ticketModel->getValidationRulesByGroupName('create');
+        $rules['department'] .= "|in_list[$departmentList]";
+
+        if (!$this->validate($rules)) {
+            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
         $creatorId = auth()->id();
@@ -74,6 +117,7 @@ class TicketsController extends BaseController
             'priority'    => $post['priority'],
             'created_by'  => $creatorId,
             'customer_id' => $post['customer_id'],
+            'department'  => $post['department'],
         ];
 
         $ticketId = $this->ticketModel->insert($ticketData);
@@ -167,6 +211,8 @@ class TicketsController extends BaseController
             $data['customers'] = $this->userModel->getUsersByGroupName('user'); // Admins can reassign customers
         }
 
+        $data['departments'] = $this->getDepartments();
+
         return view('tickets/edit', $data);
     }
 
@@ -203,9 +249,28 @@ class TicketsController extends BaseController
 
         log_activity("updated <a href='" . url_to('tickets.show', $ticketId) . "'>Ticket #{$ticketId}</a>");
 
+        // 6. Check if the user has access to the ticket's new department
+        $user = auth()->user();
+        $redirectRoute = 'tickets.show';
+
+        // If the 'department' was updated AND the user is not an admin,
+        // check if the user is in the new department.
+        if (isset($updateData['department']) && !$user->can('admin.access')) {
+            $userGroups = $user->getGroups();
+            // If the user's groups do not include the new department, redirect them
+            // to the index page instead of the ticket page.
+            if (!in_array($updateData['department'], $userGroups)) {
+                $redirectRoute = 'tickets.index';
+            }
+        }
+
+        // 7. Redirect to the appropriate page with a success message
+        // Note the corrected route name 'tickets.show'
+        return redirect()->to(url_to($redirectRoute, $ticketId))->with('message', 'Ticket updated successfully.');
+        
         // 6. Redirect to the ticket's show page with a success message
         // Note the corrected route name 'tickets.show'
-        return redirect()->to(url_to('tickets.show', $ticketId))->with('message', 'Ticket updated successfully.');
+        // return redirect()->to(url_to('tickets.show', $ticketId))->with('message', 'Ticket updated successfully.');
     }
 
     // DELETE /tickets/{id}
@@ -289,5 +354,19 @@ class TicketsController extends BaseController
         log_activity("closed <a href='" . url_to('tickets.show', $ticketId) . "'>Ticket #{$ticketId}</a>");
 
         return redirect()->back()->with('error', 'An error occurred while trying to close the ticket.');
+    }
+
+    private function getDepartments()
+    {
+        $authGroups = config('AuthGroups');
+        $departments = [];
+
+        foreach ($authGroups->groups as $groupName => $groupData) {
+            if (isset($groupData['department'])) {
+                $departments[$groupName] = $groupData['department'];
+            }
+        }
+
+        return $departments;
     }
 }

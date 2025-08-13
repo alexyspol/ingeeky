@@ -27,6 +27,11 @@ class UsersSeeder extends Seeder
                 'email'    => 'support@ingeeky.com',
                 'group'    => 'support',
             ],
+            [
+                'username' => 'sales',
+                'email'    => 'sales@ingeeky.com',
+                'group'    => 'sales',
+            ],
         ];
 
         foreach ($userList as $data) {

@@ -91,6 +91,7 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ticket</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
                                 <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
@@ -138,6 +139,9 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 capitalize">
                                         <?= esc($ticket['priority']) ?>
                                     </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 capitalize">
+                                        <?= esc($ticket['department']) ?>
+                                    </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                         <?= date('M j, Y', strtotime($ticket['created_at'] ?? 'now')) ?>
                                     </td>
@@ -153,23 +157,24 @@
                                             </svg>
                                         </a>
 
-                                        <?php if($ticket['status'] !== 'closed'): ?>
-                                            <!-- Close Button -->
-                                            <form action="<?= url_to('tickets.close', $ticket['id']) ?>" method="post" class="inline-flex" onsubmit="return confirm('Are you sure you want to close this ticket?');">
-                                                <?= csrf_field() ?>
-                                                <input type="hidden" name="_method" value="PATCH">
-                                                <button type="submit"
-                                                        class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700 transition-colors"
-                                                        title="Close Ticket">
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
-                                                    </svg>
-                                                </button>
-                                            </form>
+                                        <?php if (auth()->user()->can('tickets.close')) : ?>
+                                            <?php if($ticket['status'] !== 'closed'): ?>
+                                                <!-- Close Button -->
+                                                <form action="<?= url_to('tickets.close', $ticket['id']) ?>" method="post" class="inline-flex" onsubmit="return confirm('Are you sure you want to close this ticket?');">
+                                                    <?= csrf_field() ?>
+                                                    <input type="hidden" name="_method" value="PATCH">
+                                                    <button type="submit"
+                                                            class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700 transition-colors"
+                                                            title="Close Ticket">
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
+                                                        </svg>
+                                                    </button>
+                                                </form>
+                                            <?php endif; ?>
                                         <?php endif; ?>
 
-                                        <?php if (auth()->user()->can('admin.access')) : ?>
-
+                                        <?php if (auth()->user()->can('tickets.edit')) : ?>
                                             <!-- Edit Button -->
                                             <a href="<?= url_to('tickets.edit', $ticket['id']) ?>"
                                                class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-yellow-50 text-yellow-600 hover:bg-yellow-100 hover:text-yellow-700 transition-colors"
@@ -178,7 +183,9 @@
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                 </svg>
                                             </a>
+                                        <?php endif; ?>
 
+                                        <?php if (auth()->user()->can('tickets.delete')) : ?>
                                             <!-- Delete Button -->
                                             <form action="<?= url_to('tickets.delete', $ticket['id']) ?>" method="post" class="inline-flex" onsubmit="return confirm('Are you sure you want to delete this ticket?');">
                                                 <?= csrf_field() ?>

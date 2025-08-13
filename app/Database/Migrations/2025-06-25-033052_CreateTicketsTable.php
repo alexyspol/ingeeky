@@ -15,6 +15,7 @@ class CreateTicketsTable extends Migration
             'priority'    => ['type' => 'ENUM', 'constraint' => ['low', 'normal', 'high'], 'default' => 'normal'],
             'customer_id' => ['type' => 'INT', 'unsigned' => true],
             'created_by'  => ['type' => 'INT', 'unsigned' => true],
+            'department'  => ['type' => 'VARCHAR', 'constraint' => 255, 'null' => false],
             'created_at'  => ['type' => 'DATETIME', 'null' => true],
             'updated_at'  => ['type' => 'DATETIME', 'null' => true],
         ]);

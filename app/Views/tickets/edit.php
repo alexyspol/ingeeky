@@ -40,7 +40,10 @@
                                 <option value="open" <?= $ticket['status'] === 'open' ? 'selected' : '' ?>>Open</option>
                                 <option value="customer replied" <?= $ticket['status'] === 'customer replied' ? 'selected' : '' ?>>Customer Replied</option>
                                 <option value="awaiting customer" <?= $ticket['status'] === 'awaiting customer' ? 'selected' : '' ?>>Awaiting Customer</option>
-                                <option value="closed" <?= $ticket['status'] === 'closed' ? 'selected' : '' ?>>Closed</option>
+                                
+                                <?php if(auth()->user()->can('tickets.close')): ?>
+                                    <option value="closed" <?= $ticket['status'] === 'closed' ? 'selected' : '' ?>>Closed</option>
+                                <?php endif; ?>
                             </select>
                         </div>
 
@@ -59,24 +62,45 @@
                             </select>
                         </div>
 
-                        <!-- Customer -->
+                        <!-- Department -->
                         <div>
-                            <label for="customer_id" class="block text-sm font-medium text-gray-700 mb-1">Assigned to Customer</label>
+                            <label for="department" class="block text-sm font-medium text-gray-700 mb-1">Department</label>
                             <select
-                                name="customer_id"
-                                id="customer_id"
+                                name="department"
+                                id="department"
                                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                                 required
                             >
-                                <?php foreach($customers as $customer): ?>
+                                <?php foreach ($departments as $groupName => $departmentName): ?>
                                     <option
-                                        value="<?= esc($customer->id) ?>"
-                                        <?= set_select('customer_id', $customer->id, $customer->id === $ticket['customer_id']) ?>>
-                                        <?= esc($customer->username) ?>
+                                        value="<?= esc($groupName) ?>"
+                                        <?= set_select('department', $groupName, $groupName === $ticket['department']) ?>>
+                                        <?= esc($departmentName) ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
+
+                        <!-- Customer -->
+                        <?php if(!empty($customers)): ?>
+                            <div>
+                                <label for="customer_id" class="block text-sm font-medium text-gray-700 mb-1">Assigned to Customer</label>
+                                <select
+                                    name="customer_id"
+                                    id="customer_id"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                                    required
+                                >
+                                    <?php foreach($customers as $customer): ?>
+                                        <option
+                                            value="<?= esc($customer->id) ?>"
+                                            <?= set_select('customer_id', $customer->id, $customer->id === $ticket['customer_id']) ?>>
+                                            <?= esc($customer->username) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        <?php endif; ?>
 
                         <!-- Buttons -->
                         <div class="flex justify-end space-x-3">

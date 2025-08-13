@@ -15,35 +15,32 @@ class TicketModel extends Model
         'created_by',
         'customer_id',
         'priority',
+        'department',
     ];
 
     protected $useTimestamps = true;
     protected $dateFormat    = 'datetime';
 
-    protected $validationRules = [
-    // These are the rules for a CREATE action
-        'title'       => 'required|min_length[3]|max_length[255]',
-        'status'      => 'required|in_list[open,closed,pending,customer replied,awaiting customer]',
-        'created_by'  => 'required|integer|is_not_unique[users.id]',
-        'customer_id' => 'required|integer|is_not_unique[users.id]',
-        'priority'    => 'required|in_list[low,normal,high]',
-    ];
-
     protected $validationGroups = [
-        // This is a group of rules for an UPDATE action
+        // Note:
+        //  - the 'in_list' rule for 'department' is added dynamically.
         'update' => [
             'title'       => 'permit_empty|min_length[3]|max_length[255]',
             'status'      => 'permit_empty|in_list[open,customer replied,awaiting customer,closed]',
             'priority'    => 'permit_empty|in_list[low,normal,high]',
             'customer_id' => 'permit_empty|integer|is_not_unique[users.id]',
+            'department'  => 'required',
         ],
-        // The default rules can also be put in a group
+
+        // Note:
+        //  - 'status' and 'created_by' are set in the controller,
+        //  - the 'in_list' rule for 'department' is added dynamically.
         'create' => [
             'title'       => 'required|min_length[3]|max_length[255]',
-            'status'      => 'required|in_list[open,customer replied,awaiting customer,closed]',
             'priority'    => 'required|in_list[low,normal,high]',
             'customer_id' => 'required|integer|is_not_unique[users.id]',
-            'created_by'  => 'required|integer|is_not_unique[users.id]',
+            'department'  => 'required',
+            'message'     => 'required',
         ],
     ];
 
@@ -60,6 +57,10 @@ class TicketModel extends Model
             'required' => 'Please select a priority.',
             'in_list'  => 'Priority must be one of: low, normal, high.',
         ],
+        'department' => [
+            'required' => 'Please select a department.',
+            'in_list'  => 'Please select a valid department from the provided list.',
+        ],
         'customer_id' => [
             'required'      => 'Customer is required.',
             'integer'       => 'Customer ID must be an integer.',
@@ -75,5 +76,10 @@ class TicketModel extends Model
     public function getAllowedFields()
     {
         return $this->allowedFields;
+    }
+
+    public function getValidationRulesByGroupName(string $groupName)
+    {
+        return $this->validationGroups[$groupName];
     }
 }

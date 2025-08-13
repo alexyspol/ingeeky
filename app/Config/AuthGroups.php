@@ -51,7 +51,13 @@ class AuthGroups extends ShieldAuthGroups
         ],
         'support' => [
             'title'       => 'Support Agent',
+            'department'  => 'Support Department',
             'description' => 'Users who provide customer support.',
+        ],
+        'sales' => [
+            'title'       => 'Sales Agent',
+            'department'  => 'Sales Department',
+            'description' => 'Users responsible for handling sales and client acquisition.',
         ],
         'user' => [
             'title'       => 'User',
@@ -94,27 +100,31 @@ class AuthGroups extends ShieldAuthGroups
      * This defines group-level permissions.
      */
     public array $matrix = [
-        'superadmin' => [
-            'admin.*',
-            'users.*',
-            'beta.*',
-        ],
         'admin' => [
             'admin.access',
             'users.create',
             'users.edit',
             'users.delete',
             'beta.access',
+            'tickets.*',
         ],
         'support' => [
-            'admin.access',
             'admin.settings',
             'users.create',
             'users.edit',
             'beta.access',
+            'tickets.edit',
+            'tickets.update',
+            'tickets.assign_customer',
+        ],
+        'sales' => [
+            'tickets.edit',
+            'tickets.update',
+            'tickets.assign_customer',
         ],
         'user' => [
-            'tickets.access'
+            'tickets.show',
+            'tickets.close',
         ],
         'beta' => [
             'beta.access',

@@ -27,10 +27,10 @@ $routes->group('tickets', ['filter' => 'session'], function($routes) {
     $routes->get('/', 'TicketsController::index', ['as' => 'tickets.index']);
     $routes->post('/', 'TicketsController::create', ['as' => 'tickets.create']);
     $routes->get('new', 'TicketsController::new', ['as' => 'tickets.new']);
-    $routes->get('(:num)', 'TicketsController::show/$1', ['as' => 'tickets.show']);
-    $routes->get('(:num)/edit', 'TicketsController::edit/$1', ['as' => 'tickets.edit', 'filter' => 'permission:admin.access']);
-    $routes->patch('(:num)', 'TicketsController::update/$1', ['as' => 'tickets.update', 'filter' => 'permission:admin.access']);
-    $routes->delete('(:num)', 'TicketsController::delete/$1', ['as' => 'tickets.delete']);
+    $routes->get('(:num)', 'TicketsController::show/$1', ['as' => 'tickets.show', 'filter' => 'ticketAccess']);
+    $routes->get('(:num)/edit', 'TicketsController::edit/$1', ['as' => 'tickets.edit', 'filter' => 'permission:tickets.edit']);
+    $routes->patch('(:num)', 'TicketsController::update/$1', ['as' => 'tickets.update', 'filter' => 'permission:tickets.update']);
+    $routes->delete('(:num)', 'TicketsController::delete/$1', ['as' => 'tickets.delete', 'filter' => 'permission:tickets.delete']);
 
     $routes->post('(:num)/reply', 'TicketsController::reply/$1', ['as' => 'tickets.reply']);
     $routes->patch('(:num)/close', 'TicketsController::close/$1', ['as' => 'tickets.close']);

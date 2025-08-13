@@ -36,6 +36,7 @@ class Filters extends BaseFilters
         'performance'   => PerformanceMetrics::class,
         'session'       => \CodeIgniter\Shield\Filters\SessionAuth::class,
         'isEmployee'    => \App\Filters\IsEmployeeFilter::class,
+        'ticketAccess'  => \App\Filters\TicketAccessFilter::class,
     ];
 
     /**
