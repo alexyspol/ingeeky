@@ -111,10 +111,20 @@ class UsersController extends BaseController
 
     public function delete($userId)
     {
+        // First, find the user before deleting them
+        $user = $this->userModel->find($userId);
+
+        // If the user doesn't exist, we can't delete them.
+        if (!$user) {
+            return redirect()->back()->with('error', 'User not found.');
+        }
+
+        // Now, attempt to delete the user
         if (! $this->userModel->delete($userId, true)) {
             return redirect()->back()->with('error', 'Failed to delete user.');
         }
 
+        // Use the retrieved $user object for the log message
         log_activity("deleted user: {$user->username} (ID: {$user->id})");
 
         return redirect()->to(route_to('users.index'))->with('message', 'User deleted successfully.');
